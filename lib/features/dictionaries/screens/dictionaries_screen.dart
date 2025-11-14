@@ -5,16 +5,50 @@ import '../bloc/dictionaries_cubit.dart';
 import '../bloc/dictionaries_state.dart';
 import '../widgets/topic_card.dart';
 
-class DictionariesScreen extends StatelessWidget {
-  const DictionariesScreen({super.key});
+
+class DictionariesPage extends StatelessWidget {
+  const DictionariesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => DictionariesCubit(),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Словари')),
-        body: BlocBuilder<DictionariesCubit, DictionariesState>(
+      child: const DictionariesView(),
+    );
+  }
+}
+
+
+class DictionariesView extends StatelessWidget {
+  const DictionariesView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFcfd9df),
+      appBar: AppBar(
+        title: const Text('Словари'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.book),
+            onPressed: () => context.go('/dictionaries'),
+            tooltip: 'Словари',
+          ),
+          IconButton(
+            icon: const Icon(Icons.school),
+            onPressed: () => context.go('/learning'),
+            tooltip: 'Изучение',
+          ),
+          IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: () => context.go('/progress'),
+            tooltip: 'Прогресс',
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: BlocBuilder<DictionariesCubit, DictionariesState>(
           builder: (context, state) {
             return ListView.builder(
               itemCount: state.topics.length,
@@ -32,10 +66,11 @@ class DictionariesScreen extends StatelessWidget {
             );
           },
         ),
-        floatingActionButton: _buildFAB(context),
       ),
+      floatingActionButton: _buildFAB(context),
     );
   }
+  
 
   Widget _buildFAB(BuildContext context) {
     final controller = TextEditingController();
@@ -44,9 +79,15 @@ class DictionariesScreen extends StatelessWidget {
         context: context,
         builder: (_) => AlertDialog(
           title: const Text('Новая тема'),
-          content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'Название')),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: 'Название'),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Отмена'),
+            ),
             ElevatedButton(
               onPressed: () {
                 if (controller.text.isNotEmpty) {
@@ -70,16 +111,32 @@ class DictionariesScreen extends StatelessWidget {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Добавить слово'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: wordCtrl, decoration: const InputDecoration(labelText: 'Слово')),
-          TextField(controller: transCtrl, decoration: const InputDecoration(labelText: 'Перевод')),
-        ]),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: wordCtrl,
+              decoration: const InputDecoration(labelText: 'Слово'),
+            ),
+            TextField(
+              controller: transCtrl,
+              decoration: const InputDecoration(labelText: 'Перевод'),
+            ),
+          ],
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
           ElevatedButton(
             onPressed: () {
               if (wordCtrl.text.isNotEmpty && transCtrl.text.isNotEmpty) {
-                context.read<DictionariesCubit>().addWord(topicIndex, wordCtrl.text, transCtrl.text);
+                context.read<DictionariesCubit>().addWord(
+                  topicIndex,
+                  wordCtrl.text,
+                  transCtrl.text,
+                );
               }
               Navigator.pop(context);
             },
@@ -97,7 +154,8 @@ class DictionariesScreen extends StatelessWidget {
       builder: (_) => AlertDialog(
         title: Text(cubit.state.topics[topicIndex].name),
         content: SizedBox(
-          width: 300, height: 300,
+          width: 300,
+          height: 300,
           child: ListView.builder(
             itemCount: cubit.state.topics[topicIndex].words.length,
             itemBuilder: (_, i) {
@@ -117,7 +175,12 @@ class DictionariesScreen extends StatelessWidget {
             },
           ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Закрыть'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Закрыть'),
+          )
+        ],
       ),
     );
   }

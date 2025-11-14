@@ -8,38 +8,57 @@ import '../../widgets/word_card.dart';
 import 'flashcard_cubit.dart';
 import 'flashcard_state.dart';
 
-
-class FlashCardScreen extends StatelessWidget {
+/// Главный экран — только BlocProvider
+class FlashCardPage extends StatelessWidget {
   final Topic topic;
   final bool learningNew;
 
-  const FlashCardScreen({super.key, required this.topic, required this.learningNew});
+  const FlashCardPage({
+    super.key,
+    required this.topic,
+    required this.learningNew,
+  });
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => FlashCardCubit(topic: topic, learningNew: learningNew),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Карточки: ${topic.name}'),
-          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
+      child: const FlashCardView(),
+    );
+  }
+}
+
+
+class FlashCardView extends StatelessWidget {
+  const FlashCardView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Карточки: ${context.read<FlashCardCubit>().topic.name}'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
-        backgroundColor: const Color(0xFFcfd9df),
-        body: BlocBuilder<FlashCardCubit, FlashCardState>(
-          builder: (context, state) {
-            if (state.words.isEmpty) return const EmptyStateScreen();
-            final word = state.words[state.currentIndex];
-            return Center(
-              child: WordCard(
-                word: word,
-                showTranslation: state.showTranslation,
-                onShowTranslation: () => context.read<FlashCardCubit>().showTranslation(),
-                onShowAgain: () => context.read<FlashCardCubit>().showAgain(),
-                onRemembered: () => context.read<FlashCardCubit>().rememberWord(),
-              ),
-            );
-          },
-        ),
+      ),
+      backgroundColor: const Color(0xFFcfd9df),
+      body: BlocBuilder<FlashCardCubit, FlashCardState>(
+        builder: (context, state) {
+          if (state.words.isEmpty) {
+            return const EmptyStateScreen();
+          }
+          final word = state.words[state.currentIndex];
+          return Center(
+            child: WordCard(
+              word: word,
+              showTranslation: state.showTranslation,
+              onShowTranslation: () => context.read<FlashCardCubit>().showTranslation(),
+              onShowAgain: () => context.read<FlashCardCubit>().showAgain(),
+              onRemembered: () => context.read<FlashCardCubit>().rememberWord(),
+            ),
+          );
+        },
       ),
     );
   }
