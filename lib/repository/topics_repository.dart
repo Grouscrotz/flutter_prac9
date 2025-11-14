@@ -1,73 +1,56 @@
-import 'package:flutter/material.dart';
-import 'package:prac9/models/topic.dart';
-import 'package:prac9/models/word.dart';
+import '../models/topic.dart';
+import '../models/word.dart';
 
-/// InheritedWidget — передаёт список тем и callback
-class TopicsInherited extends InheritedWidget {
-  final List<Topic> topics;
-  final VoidCallback onUpdate;
+class TopicsRepository {
+  static final TopicsRepository _instance = TopicsRepository._internal();
+  factory TopicsRepository() => _instance;
+  TopicsRepository._internal();
 
-  const TopicsInherited({
-    super.key,
-    required this.topics,
-    required this.onUpdate,
-    required super.child,
-  });
-
-  static TopicsInherited of(BuildContext context) {
-    final result = context.dependOnInheritedWidgetOfExactType<TopicsInherited>();
-    assert(result != null, 'No TopicsInherited found in context');
-    return result!;
-  }
-
-  @override
-  bool updateShouldNotify(TopicsInherited oldWidget) {
-    return oldWidget.topics != topics;
-  }
-}
-
-/// Сервис — бизнес-логика, внедряется через GetIt
-class TopicsService {
-  final List<Topic> _topics;
-  final VoidCallback _onUpdate;
-
-  TopicsService(this._topics, this._onUpdate);
+  List<Topic> _topics = _getInitialTopics();
 
   List<Topic> get topics => List.unmodifiable(_topics);
+  Topic get selectedTopic => _topics.firstWhere((t) => t.selected, orElse: () => _topics.first);
 
   void addTopic(String name) {
-    _topics.add(Topic(name: name, words: []));
-    _onUpdate();
+    _topics = [..._topics, Topic(name: name, words: [])];
   }
 
   void selectTopic(Topic topic) {
-    for (var t in _topics) {
-      t.selected = (t == topic);
-    }
-    _onUpdate();
+    _topics = _topics.map((t) => t.copyWith(selected: t == topic)).toList();
   }
 
   void addWord(Topic topic, String word, String translation) {
-    topic.words.add(Word(word: word, translation: translation));
-    _onUpdate();
+    final index = _topics.indexOf(topic);
+    final newWord = Word(word: word, translation: translation);
+    final updatedWords = [..._topics[index].words, newWord];
+    _topics[index] = _topics[index].copyWith(words: updatedWords);
+    _topics = List.from(_topics);
   }
 
-  void deleteWord(Topic topic, int index) {
-    if (index >= 0 && index < topic.words.length) {
-      topic.words.removeAt(index);
-      _onUpdate();
-    }
+  void deleteWord(Topic topic, int wordIndex) {
+    final index = _topics.indexOf(topic);
+    final updatedWords = [..._topics[index].words]..removeAt(wordIndex);
+    _topics[index] = _topics[index].copyWith(words: updatedWords);
+    _topics = List.from(_topics);
   }
 
   void resetProgress(Topic topic) {
-    for (var w in topic.words) {
-      w.learned = false;
-    }
-    _onUpdate();
+    final index = _topics.indexOf(topic);
+    final updatedWords = _topics[index].words.map((w) => w.copyWith(learned: false)).toList();
+    _topics[index] = _topics[index].copyWith(words: updatedWords);
+    _topics = List.from(_topics);
   }
 
-  // Инициализация
-  static List<Topic> getInitialTopics() {
+  void toggleLearned(Topic topic, Word word, bool learned) {
+    final tIndex = _topics.indexOf(topic);
+    final wIndex = _topics[tIndex].words.indexOf(word);
+    final updatedWord = word.copyWith(learned: learned);
+    final updatedWords = [..._topics[tIndex].words]..[wIndex] = updatedWord;
+    _topics[tIndex] = _topics[tIndex].copyWith(words: updatedWords);
+    _topics = List.from(_topics);
+  }
+
+  static List<Topic> _getInitialTopics() {
     return [
       Topic(name: 'Фрукты', words: [
         Word(word: 'Apple', translation: 'Яблоко', url: 'https://www.applesfromny.com/wp-content/uploads/2020/06/SnapdragonNEW.png'),

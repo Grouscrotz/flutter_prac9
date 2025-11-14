@@ -1,62 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:get_it/get_it.dart';
-import 'package:prac9/data/topics_data.dart';
-import 'package:prac9/features/dictionaries/widgets/topic_card.dart';
+import '../bloc/dictionaries_cubit.dart';
+import '../bloc/dictionaries_state.dart';
+import '../widgets/topic_card.dart';
 
-import '../../../main.dart';
-import '../../../models/topic.dart';
-
-class DictionariesScreen extends StatefulWidget {
+class DictionariesScreen extends StatelessWidget {
   const DictionariesScreen({super.key});
 
   @override
-  State<DictionariesScreen> createState() => _DictionariesScreenState();
-}
-
-class _DictionariesScreenState extends State<DictionariesScreen> {
-  final _controller = TextEditingController();
-
-  late final service = getIt<TopicsService>();
-
-  @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Словари')),
-      body: ListView.builder(
-        itemCount: service.topics.length,
-        itemBuilder: (_, i) {
-          final topic = service.topics[i];
-          return TopicCard(
-            topic: topic,
-            selected: topic.selected,
-            onTap: () => service.selectTopic(topic),
-            onResetProgress: () => service.resetProgress(topic),
-            onShowWords: () => _showWords(topic),
-            onAddWord: () => _showAddWord(topic),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          if (_controller.text.isNotEmpty) {
-            service.addTopic(_controller.text);
-            _controller.clear();
-          }
-        },
-        child: const Icon(Icons.add),
+    return BlocProvider(
+      create: (_) => DictionariesCubit(),
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Словари')),
+        body: BlocBuilder<DictionariesCubit, DictionariesState>(
+          builder: (context, state) {
+            return ListView.builder(
+              itemCount: state.topics.length,
+              itemBuilder: (_, i) {
+                final topic = state.topics[i];
+                return TopicCard(
+                  topic: topic,
+                  selected: topic.selected,
+                  onTap: () => context.read<DictionariesCubit>().selectTopic(i),
+                  onResetProgress: () => context.read<DictionariesCubit>().resetProgress(i),
+                  onShowWords: () => _showWords(context, i),
+                  onAddWord: () => _showAddWord(context, i),
+                );
+              },
+            );
+          },
+        ),
+        floatingActionButton: _buildFAB(context),
       ),
     );
   }
 
-  void _showAddWord(Topic topic) {
+  Widget _buildFAB(BuildContext context) {
+    final controller = TextEditingController();
+    return FloatingActionButton(
+      onPressed: () => showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Новая тема'),
+          content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'Название')),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+            ElevatedButton(
+              onPressed: () {
+                if (controller.text.isNotEmpty) {
+                  context.read<DictionariesCubit>().addTopic(controller.text);
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Добавить'),
+            ),
+          ],
+        ),
+      ),
+      child: const Icon(Icons.add),
+    );
+  }
+
+  void _showAddWord(BuildContext context, int topicIndex) {
     final wordCtrl = TextEditingController();
     final transCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Добавить в "${topic.name}"'),
+        title: const Text('Добавить слово'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(controller: wordCtrl, decoration: const InputDecoration(labelText: 'Слово')),
           TextField(controller: transCtrl, decoration: const InputDecoration(labelText: 'Перевод')),
@@ -66,7 +79,7 @@ class _DictionariesScreenState extends State<DictionariesScreen> {
           ElevatedButton(
             onPressed: () {
               if (wordCtrl.text.isNotEmpty && transCtrl.text.isNotEmpty) {
-                service.addWord(topic, wordCtrl.text, transCtrl.text);
+                context.read<DictionariesCubit>().addWord(topicIndex, wordCtrl.text, transCtrl.text);
               }
               Navigator.pop(context);
             },
@@ -77,27 +90,27 @@ class _DictionariesScreenState extends State<DictionariesScreen> {
     );
   }
 
-  void _showWords(Topic topic) {
+  void _showWords(BuildContext context, int topicIndex) {
+    final cubit = context.read<DictionariesCubit>();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(topic.name),
+        title: Text(cubit.state.topics[topicIndex].name),
         content: SizedBox(
-          width: 300,
-          height: 300,
+          width: 300, height: 300,
           child: ListView.builder(
-            itemCount: topic.words.length,
+            itemCount: cubit.state.topics[topicIndex].words.length,
             itemBuilder: (_, i) {
-              final w = topic.words[i];
+              final w = cubit.state.topics[topicIndex].words[i];
               return ListTile(
                 title: Text(w.word),
                 subtitle: Text(w.translation),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () {
-                    service.deleteWord(topic, i);
+                    cubit.deleteWord(topicIndex, i);
                     Navigator.pop(context);
-                    _showWords(topic);
+                    _showWords(context, topicIndex);
                   },
                 ),
               );
