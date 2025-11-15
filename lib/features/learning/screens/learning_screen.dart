@@ -81,7 +81,7 @@ class LearningView extends StatelessWidget {
                         icon: Icons.play_arrow,
                         iconColor: Colors.green,
                         label: 'Учить новые слова',
-                        counter: state.newCount,
+                        counter: 6,
                         onPressed: () => context.push(
                           '/flashcard',
                           extra: {'topic': state.topic, 'learningNew': true},
@@ -92,7 +92,7 @@ class LearningView extends StatelessWidget {
                         icon: Icons.refresh,
                         iconColor: Colors.orangeAccent,
                         label: 'Повторить слова',
-                        counter: state.repeatCount,
+                        counter: 4,
                         onPressed: () => context.push(
                           '/flashcard',
                           extra: {'topic': state.topic, 'learningNew': false},

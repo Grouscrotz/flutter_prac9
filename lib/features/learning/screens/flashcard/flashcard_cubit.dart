@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../models/topic.dart';
 import '../../../../models/word.dart';
 import '../../../../repository/topics_repository.dart';
@@ -14,30 +13,10 @@ class FlashCardCubit extends Cubit<FlashCardState> {
       : super(FlashCardState(words: _getWords(topic, learningNew))) {
     _shuffle();
   }
+  void showTranslation() => emit(state.copyWith(showTranslation: true));
 
   static List<Word> _getWords(Topic topic, bool learningNew) {
     return topic.words.where((w) => w.learned == !learningNew).toList();
-  }
-
-  void _shuffle() {
-    final shuffled = [...state.words]..shuffle();
-    emit(state.copyWith(words: shuffled));
-  }
-
-  void showTranslation() => emit(state.copyWith(showTranslation: true));
-
-  void rememberWord() {
-    if (state.words.isEmpty) return;
-    final word = state.words[state.currentIndex];
-    repo.toggleLearned(topic, word, true);
-    _next();
-  }
-
-  void showAgain() {
-    if (state.words.isEmpty) return;
-    final word = state.words.removeAt(state.currentIndex);
-    final newList = [...state.words, word];
-    emit(state.copyWith(words: newList, currentIndex: state.currentIndex % newList.length, showTranslation: false));
   }
 
   void _next() {
@@ -47,4 +26,29 @@ class FlashCardCubit extends Cubit<FlashCardState> {
     if (next == 0) {
     }
   }
+
+  void showAgain() {
+    if (state.words.isEmpty) return;
+    final word = state.words.removeAt(state.currentIndex);
+    final newList = [...state.words, word];
+    emit(state.copyWith(words: newList,
+        currentIndex: state.currentIndex % newList.length,
+        showTranslation: false));
+  }
+
+  void _shuffle() {
+    final shuffled = [...state.words]..shuffle();
+    emit(state.copyWith(words: shuffled));
+  }
+
+
+  void rememberWord() {
+    if (state.words.isEmpty) return;
+    final word = state.words[state.currentIndex];
+    repo.toggleLearned(topic, word, true);
+    _next();
+  }
+
+
+
 }

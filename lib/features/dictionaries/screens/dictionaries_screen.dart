@@ -70,7 +70,7 @@ class DictionariesView extends StatelessWidget {
       floatingActionButton: _buildFAB(context),
     );
   }
-  
+
 
   Widget _buildFAB(BuildContext context) {
     final controller = TextEditingController();

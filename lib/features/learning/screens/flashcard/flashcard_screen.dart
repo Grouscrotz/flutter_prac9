@@ -8,7 +8,6 @@ import '../../widgets/word_card.dart';
 import 'flashcard_cubit.dart';
 import 'flashcard_state.dart';
 
-/// Главный экран — только BlocProvider
 class FlashCardPage extends StatelessWidget {
   final Topic topic;
   final bool learningNew;

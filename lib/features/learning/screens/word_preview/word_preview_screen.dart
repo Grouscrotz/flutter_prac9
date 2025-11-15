@@ -42,7 +42,7 @@ class WordPreviewView extends StatelessWidget {
           final topic = TopicsRepository().selectedTopic;
 
           return ListView.builder(
-            padding: const EdgeInsets.only(top: 16), // небольшой отступ сверху
+            padding: const EdgeInsets.only(top: 16),
             itemCount: state.words.length,
             itemBuilder: (context, index) {
               final word = state.words[index];
